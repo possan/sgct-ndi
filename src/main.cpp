@@ -359,6 +359,11 @@ void keyboard(Key key, Modifier, Action action, int, Window *) {
     frameNumber = 0;
   }
 
+  if (key == Key::R && action == Action::Press) {
+    phi = glm::pi<float>();
+    theta = 0.f;
+  }
+
   if (key == Key::Esc && action == Action::Press) {
     Engine::instance().terminate();
   }
