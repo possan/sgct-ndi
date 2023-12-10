@@ -3,4 +3,4 @@
 	url = git@github.com:tobiasebsen/libndi.git
 [submodule "src/ext/sgct"]
 	path = src/ext/sgct
-	url = https://github.com/sgct/sgct
+	url = https://github.com/possan/sgct
