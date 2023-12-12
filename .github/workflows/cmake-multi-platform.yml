@@ -37,9 +37,6 @@ jobs:
             c_compiler: clang
           - os: ubuntu-latest
             c_compiler: cl
-    defaults:
-      run:
-        shell: msys2 {0}
 
     steps:
       - uses: actions/checkout@v3
@@ -79,7 +76,8 @@ jobs:
       #   run: |
       #     pacman --noconfirm -S mingw-w64-ucrt-x86_64-ffmpeg mingw-w64-ucrt-x86_64-cmake
 
-      - run: |
+      - shell: msys2 {0}
+        run: |
           cmake -G Ninja -B . -DCMAKE_BUILD_TYPE=Debug
           cmake --build .
 
