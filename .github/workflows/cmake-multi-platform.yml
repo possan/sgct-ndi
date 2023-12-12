@@ -56,7 +56,7 @@ jobs:
 
     - uses: msys2/setup-msys2@v2
       with:
-        msystem: ${{matrix.sys}}
+        msystem: msys
         pacboy: ffmpeg:p
 
     - name: Configure CMake
