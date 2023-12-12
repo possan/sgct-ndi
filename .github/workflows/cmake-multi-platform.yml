@@ -77,10 +77,12 @@ jobs:
 
       - shell: msys2 {0}
         run: |
-          cmake -E make_directory build
-          cmake -E chdir build cmake -G Ninja -B .. -DCMAKE_BUILD_TYPE=Debug
-          cmake -E chdir build cmake --build ..
+          mkdir build
+          cd build
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug ..
+          ninja
 
+      # cmake --build ..
       # - shell: msys2
       #   run: |
       #     makepkg-mingw -sCLfc --noconfirm --noprogressbar
