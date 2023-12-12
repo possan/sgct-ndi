@@ -65,7 +65,11 @@ jobs:
 
       - shell: msys2 {0}
         run: |
-          pacman --noconfirm -S cmake ffmpeg
+          pacman --noconfirm -S mingw-w64-ucrt-x86_64-ffmpeg
+
+      - shell: msys2 {0}
+        run: |
+          pacman --noconfirm -S mingw-w64-ucrt-x86_64-cmake
 
       # - shell: msys2
       #   run: |
