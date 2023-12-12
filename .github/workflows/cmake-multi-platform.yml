@@ -61,12 +61,11 @@ jobs:
           install: >-
             git
             make
-            ffmpeg
           pacboy: >-
             toolchain:p
             cmake:p
             ninja:p
-          # pacboy: ffmpeg
+            ffmpeg:p
 
       # - shell: msys2 {0}
       #   run: |
