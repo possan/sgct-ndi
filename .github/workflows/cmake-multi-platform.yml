@@ -77,8 +77,9 @@ jobs:
 
       - shell: msys2 {0}
         run: |
-          cmake -G Ninja -B . -DCMAKE_BUILD_TYPE=Debug
-          cmake --build .
+          cmake -E make_directory build
+          cmake -E chdir build cmake -G Ninja -B .. -DCMAKE_BUILD_TYPE=Debug
+          cmake -E chdir build cmake --build ..
 
       # - shell: msys2
       #   run: |
