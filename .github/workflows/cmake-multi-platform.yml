@@ -56,7 +56,7 @@ jobs:
 
       - uses: msys2/setup-msys2@v2
         with:
-          msystem: msys
+          msystem: mingw64
           update: true
           install: >-
             git
