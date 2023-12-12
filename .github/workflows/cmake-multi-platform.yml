@@ -59,6 +59,19 @@ jobs:
           msystem: msys
           # pacboy: ffmpeg
 
+      - shell: msys2 {0}
+        run: |
+          uname -a
+
+      - shell: msys2 {0}
+        run: |
+          pacman --noconfirm -S cmake ffmpeg
+
+      # - shell: msys2
+      #   run: |
+      #     makepkg-mingw -sCLfc --noconfirm --noprogressbar
+      #     pacman --noconfirm -U mingw-w64-*-any.pkg.tar.xz
+
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
         # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
