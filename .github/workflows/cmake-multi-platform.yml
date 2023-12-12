@@ -57,19 +57,29 @@ jobs:
       - uses: msys2/setup-msys2@v2
         with:
           msystem: msys
+          update: true
+          install: >-
+            git
+            make
+            ffmpeg
+          pacboy: >-
+            toolchain:p
+            cmake:p
+            ninja:p
           # pacboy: ffmpeg
 
-      - shell: msys2 {0}
-        run: |
-          uname -a
+      # - shell: msys2 {0}
+      #   run: |
+      #     uname -a
+
+      # - shell: msys2 {0}
+      #   run: |
+      #     pacman --noconfirm -S mingw-w64-ucrt-x86_64-ffmpeg mingw-w64-ucrt-x86_64-cmake
 
       - shell: msys2 {0}
         run: |
-          pacman --noconfirm -S mingw-w64-ucrt-x86_64-ffmpeg mingw-w64-ucrt-x86_64-cmake
-
-      - shell: msys2 {0}
-        run: |
-          cmake -DCMAKE_BUILD_TYPE=Debug --build .
+          cmake -G Ninja -B . -DCMAKE_BUILD_TYPE=Debug
+          cmake --build .
 
       # - shell: msys2
       #   run: |
