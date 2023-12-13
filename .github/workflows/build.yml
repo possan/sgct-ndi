@@ -1,6 +1,6 @@
 # This starter workflow is for a CMake project running on multiple platforms. There is a different starter workflow if you just want a single platform.
 # See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
-name: CMake on multiple platforms
+name: Build for Windows
 
 on:
   push:
@@ -24,7 +24,7 @@ jobs:
       # To add more build types (Release, Debug, RelWithDebInfo, etc.) customize the build_type list.
       matrix:
         os: [windows-latest]
-        build_type: [Release]
+        build_type: [Debug]
         c_compiler: [gcc, clang, cl]
         include:
           - os: windows-latest
@@ -47,6 +47,8 @@ jobs:
         run: |
           git submodule update --init --recursive
 
+      - uses: lukka/get-cmake@latest
+
       - name: Set reusable strings
         # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
         id: strings
@@ -54,18 +56,37 @@ jobs:
         run: |
           echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-      - uses: msys2/setup-msys2@v2
+      - name: Setup anew (or from cache) vcpkg (and does not build any package)
+        uses: lukka/run-vcpkg@v11
+
+      - name: Prints output of run-vcpkg's action.
+        run: echo "root='${{ steps.runvcpkg.outputs.RUNVCPKG_VCPKG_ROOT_OUT }}', triplet='${{ steps.runvcpkg.outputs.RUNVCPKG_VCPKG_DEFAULT_TRIPLET_OUT }}' "
+
+      - name: Run CMake+vcpkg+NinjaMulti-Config
+        uses: lukka/run-cmake@v10
+        id: runcmake
         with:
-          msystem: mingw64
-          update: true
-          install: >-
-            git
-            make
-          pacboy: >-
-            toolchain:p
-            cmake:p
-            ninja:p
-            ffmpeg:p
+          cmakeListsTxtPath: "${{ github.workspace }}/cmakepresets/CMakeLists.txt"
+          configurePreset: "ninja-multi-vcpkg"
+          buildPreset: "ninja-multi-vcpkg"
+          buildPresetAdditionalArgs: "[`--config Debug`]"
+
+      - name: List $RUNNER_WORKSPACE after build
+        run: find $RUNNER_WORKSPACE
+        shell: bash
+
+      # - uses: msys2/setup-msys2@v2
+      #   with:
+      #     msystem: mingw64
+      #     update: true
+      #     install: >-
+      #       git
+      #       make
+      #     pacboy: >-
+      #       toolchain:p
+      #       cmake:p
+      #       ninja:p
+      #       ffmpeg:p
 
       # - shell: msys2 {0}
       #   run: |
@@ -75,12 +96,12 @@ jobs:
       #   run: |
       #     pacman --noconfirm -S mingw-w64-ucrt-x86_64-ffmpeg mingw-w64-ucrt-x86_64-cmake
 
-      - shell: msys2 {0}
-        run: |
-          mkdir build
-          cd build
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug ..
-          ninja
+      # - shell: msys2 {0}
+      #   run: |
+      #     mkdir build
+      #     cd build
+      #     cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug ..
+      #     ninja
 
       # cmake --build ..
       # - shell: msys2
