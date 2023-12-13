@@ -1,0 +1,5 @@
+{
+  "name": "sgct-ndi",
+  "version-string": "latest",
+  "dependencies": ["ffmpeg"]
+}
