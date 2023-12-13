@@ -38,6 +38,10 @@ jobs:
           - os: ubuntu-latest
             c_compiler: cl
 
+    # See: https://github.com/lukka/CppBuildTasks-Validation/blob/v10/.github/workflows/hosted-ninja-vcpkg_submod-triplet.yml
+    env:
+      VCPKG_DEFAULT_TRIPLET: x64-windows
+
     steps:
       - uses: actions/checkout@v3
         with:
