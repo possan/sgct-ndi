@@ -65,6 +65,7 @@ add_custom_command(
   "${CMAKE_CURRENT_SOURCE_DIR}/single_node.xml"
   "${CMAKE_CURRENT_SOURCE_DIR}/two_nodes.xml"
   "${CMAKE_CURRENT_SOURCE_DIR}/two_nodes_stereo_dummy.xml"
+  "${CMAKE_CURRENT_SOURCE_DIR}/multi_viewport.xml"
   $<TARGET_FILE_DIR:sgctndi>
 )
 

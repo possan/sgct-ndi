@@ -1,0 +1,106 @@
+<?xml version="1.0" ?>
+<Cluster masterAddress="127.0.0.1">
+	<Node address="127.0.0.1" port="20401">
+		<Window fullScreen="false" numberOfSamples="1" name="GUI">
+			<!-- 16:9 aspect ratio -->
+			<Size x="256" y="256" />
+			<Res x="512" y="512" />
+			<Pos x="0" y="30" />
+			<!--
+				quality options (cubemap size):
+					- low (256)
+					- medium (512)
+					- high/1k (1024)
+					- 2k (2048)
+					- 4k (4096)
+					- 8k (8192)
+				tilt specifies the dome tilt angle in degrees from the horizontal
+			-->
+			<Viewport name="fisheye">
+				<Pos x="0.0" y="0.0" />
+				<Size x="1.0" y="1.0" />
+				<FisheyeProjection fov="180" quality="medium" tilt="0.0" alpha="false" interpolation="cubic">
+					<Background r="0.0" g="0.0" b="0.0" a="1.0" />
+				</FisheyeProjection>
+			</Viewport>
+		</Window>
+		<Window fullScreen="false" numberOfSamples="1" name="Node1">
+			<Size x="512" y="270" />
+			<Res x="4096" y="2160" />
+			<Pos x="0" y="310" />
+			<Viewport user="Projector1">
+				<!-- Proj 1 -->
+				<PlanarProjection>
+                    <FOV left="57.58" right="57.58" up="33.84" down="33.84" />
+                    <Orientation heading="-45.0" pitch="40.8415" roll="0.0" />
+				</PlanarProjection>
+			</Viewport>
+		</Window>
+		<Window fullScreen="false" numberOfSamples="1" name="Node2">
+			<Size x="512" y="270" />
+			<Res x="4096" y="2160" />
+			<Pos x="530" y="310" />
+			<Viewport user="Projector2">
+				<!-- Proj 2 -->
+				<PlanarProjection>
+                    <FOV left="57.58" right="57.58" up="33.84" down="33.84" />
+                    <Orientation heading="45.00" pitch="40.8415" roll="0.0" />
+				</PlanarProjection>
+			</Viewport>
+		</Window>
+		<Window fullScreen="false" numberOfSamples="1" name="Node3">
+			<Size x="512" y="270" />
+			<Res x="4096" y="2160" />
+			<Pos x="1060" y="310" />
+			<Viewport user="Projector3">
+				<!-- Proj 3 -->
+				<PlanarProjection>
+                    <FOV left="57.58" right="57.58" up="33.84" down="33.84" />
+                    <Orientation heading="135.00" pitch="40.8415" roll="0.0" />
+				</PlanarProjection>
+			</Viewport>
+		</Window>
+		<Window fullScreen="false" numberOfSamples="1" name="Node4">
+			<Size x="512" y="270" />
+			<Res x="4096" y="2160" />
+			<Pos x="0" y="600" />
+			<Viewport user="Projector4">
+				<!-- Proj 4 -->
+				<PlanarProjection>
+                    <FOV left="57.58" right="57.58" up="33.84" down="33.84" />
+                    <Orientation heading="225.00" pitch="40.8415" roll="0.0" />
+				</PlanarProjection>
+			</Viewport>
+		</Window>
+		<Window fullScreen="false" numberOfSamples="1" name="Node5">
+			<Size x="512" y="270" />
+			<Res x="4096" y="2160" />
+			<Pos x="530" y="600" />
+			<Viewport user="Projector5">
+				<!-- Proj 5 -->
+				<PlanarProjection>
+                    <FOV left="48.63" right="48.63" up="28.58" down="28.58" />
+                    <Orientation heading="122.00" pitch="72.5980" roll="0.0" />
+				</PlanarProjection>
+			</Viewport>
+		</Window>
+		<Window fullScreen="false" numberOfSamples="1" name="Node6">
+			<Size x="512" y="270" />
+			<Res x="4096" y="2160" />
+			<Pos x="1060" y="600" />
+			<Viewport user="Projector6">
+				<!-- Proj 6 -->
+				<PlanarProjection>
+                    <FOV left="48.63" right="48.63" up="28.58" down="28.58" />
+                    <Orientation heading="-58.00" pitch="72.5980" roll="0.0" />
+				</PlanarProjection>
+			</Viewport>
+		</Window>
+	</Node>
+	<User eyeSeparation="0.0">
+		<Pos x="0.0" y="0.0" z="0.0" />
+	</User>
+	<Settings>
+		<Display swapInterval="0" />
+	</Settings>
+</Cluster>
