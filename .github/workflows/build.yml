@@ -92,11 +92,12 @@ jobs:
           path: vcpkg/packages
           key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
 
+      # -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake
       - name: Build Project
         run: |
           mkdir build
           cd build
-          cmake .. -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake
+          cmake .. -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake"
           make
 
       - name: Prints output of run-vcpkg's action.
@@ -117,8 +118,8 @@ jobs:
       #    -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
       #    buildPresetAdditionalArgs: "[`--config Debug`]"
 
-      - name: Build library
-        run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake"
+      # - name: Build library
+      #   run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake"
 
       - name: List $RUNNER_WORKSPACE after build
         run: find $RUNNER_WORKSPACE
