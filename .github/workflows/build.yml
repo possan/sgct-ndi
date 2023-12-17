@@ -78,9 +78,13 @@ jobs:
         run: |
           vcpkg integrate install
 
-      - name: Install Dependencies 2
-        run: |
-          vcpkg install
+      - name: List $RUNNER_WORKSPACE after build
+        run: find $RUNNER_WORKSPACE
+        shell: bash
+
+      # - name: Install Dependencies 2
+      #   run: |
+      #     vcpkg install
 
       - name: Cache Vcpkg Packages
         uses: actions/cache@v2
