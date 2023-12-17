@@ -71,11 +71,15 @@ jobs:
         run: |
           git clone https://github.com/Microsoft/vcpkg.git
           cd vcpkg
+          git checkout c8696863d371ab7f46e213d8f5ca923c4aef2a00
           bootstrap-vcpkg.bat
 
       - name: Install Dependencies
         run: |
           vcpkg install
+
+      - name: Install Dependencies 2
+        run: |
           vcpkg integrate install
 
       - name: Cache Vcpkg Packages

@@ -2,8 +2,6 @@
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "name": "sgct-ndi",
   "version-string": "latest",
-  "dependencies": [
-    "ffmpeg"
-  ],
-  "builtin-baseline": "ff6867374598312866fecfc64736a334591ceace"
+  "dependencies": ["ffmpeg"],
+  "builtin-baseline": "c8696863d371ab7f46e213d8f5ca923c4aef2a00"
 }
