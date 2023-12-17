@@ -71,8 +71,8 @@ jobs:
         run: |
           git clone https://github.com/Microsoft/vcpkg.git
           cd vcpkg
-          ./bootstrap-vcpkg.sh
-          ./vcpkg integrate install
+          bootstrap-vcpkg.bat
+          vcpkg integrate install
 
       - name: Cache Vcpkg Packages
         uses: actions/cache@v2
