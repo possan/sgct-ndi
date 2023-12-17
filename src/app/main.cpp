@@ -37,7 +37,11 @@ AVPixelFormat _dstPixFmt = AV_PIX_FMT_BGR24;
 int _videoWidth = 0;
 int _videoHeight = 0;
 int videoSizeChanged = 0;
+std::mutex _videoSizeMutex;
 int _tempFrameChanged = false;
+std::mutex _tempFrameChangedM;
+std::list<int> _tempFrameChangedQ;
+std::condition_variable _tempFrameChangedCV;
 
 using namespace sgct;
 
@@ -52,7 +56,11 @@ ndi_frame_t frame;
 ndi_video_format_t format;
 ndi_codec_context_t codec_ctx;
 std::list<ndi_packet_video_t *> _queue;
-std::mutex _mutex;
+std::mutex _ndiFrameMutex;
+
+std::mutex _gpuUploadMutex;
+// std::list<int> _tempFrameChangedQ;
+// std::condition_variable _tempFrameChangedCV;
 
 // bool videochanged;
 bool plane1changed;
@@ -108,6 +116,8 @@ static int has_ipv6;
 
 volatile sig_atomic_t running = 1;
 
+std::chrono::high_resolution_clock::time_point ts_got_image, ts_started_converting_image;
+std::chrono::high_resolution_clock::time_point ts_marked_image_ready, ts_started_uploading_image;
 
 constexpr std::string_view DomeVertexShader = R"(
   #version 330 core
@@ -164,8 +174,8 @@ constexpr std::string_view DomeFragmentShaderRGB = R"(
 
   void main() {
     vec4 t1 = texture(tex1, uv);
-    color = t1
-      + vec4(uv.x / 4.0, uv.y / 4.0, 0, 0);
+    color = t1;
+    // + vec4(uv.x / 4.0, uv.y / 4.0, 0, 0);
   }
 )";
 
@@ -591,7 +601,7 @@ void ndi_connect_thread() {
         int records = 0;
         do {
             struct timeval timeout;
-            timeout.tv_sec = 5;
+            timeout.tv_sec = 10;
             timeout.tv_usec = 0;
 
             int nfds = 0;
@@ -652,25 +662,26 @@ void ndi_receiver_thread() {
 
             while (ndi_recv_is_connected(recv_ctx)) {
 
-              int data_type = ndi_recv_capture(recv_ctx, &video, &audio, &meta, 50);
+              int data_type = ndi_recv_capture(recv_ctx, &video, &audio, &meta, 100);
               switch (data_type) {
 
                   case NDI_DATA_TYPE_VIDEO:
-                     // printf("Video data received (%dx%d %.4s).\n", video.width,video.height, (char*)&video.fourcc);
                     {
-                      ndi_packet_video_t *clone =
-                          (ndi_packet_video_t *)malloc(sizeof(ndi_packet_video_t));
-                      memcpy(clone, &video, sizeof(ndi_packet_video_t));
+                      // printf("Video data received (%dx%d %.4s).\n", video.width, video.height, (char*)&video.fourcc);
+                          ndi_packet_video_t *clone =
+                              (ndi_packet_video_t *)malloc(sizeof(ndi_packet_video_t));
+                          memcpy(clone, &video, sizeof(ndi_packet_video_t));
 
-                      _mutex.lock();
-                      while (_queue.size() > 5) {
-                        ndi_packet_video_t *v = _queue.back();
-                        _queue.pop_back();
-                        ndi_recv_free_video(v);
-                        free(v);
-                      }
-                      _queue.push_back(clone);
-                      _mutex.unlock();
+                          _ndiFrameMutex.lock();
+                          while (_queue.size() > 0) {
+                            ndi_packet_video_t *v = _queue.back();
+                            _queue.pop_back();
+                            ndi_recv_free_video(v);
+                            free(v);
+                          }
+                          _queue.push_back(clone);
+                          ts_got_image = std::chrono::high_resolution_clock::now();
+                          _ndiFrameMutex.unlock();
                     }
                     break;
 
@@ -688,8 +699,6 @@ void ndi_receiver_thread() {
 
             printf("NDI disconnected.\n");
             ndi_recv_free(recv_ctx);
-
-
         }
         else {
             printf("No NDI source found yet.\n");
@@ -700,20 +709,31 @@ void ndi_receiver_thread() {
 
 
 void ndi_decoder_thread() {
+#if WIN32
+    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
+#endif
+
     while (true) {
         // Pop most recent frame off the queue
         ndi_packet_video_t* video = NULL;
         
         if (_queue.size() > 0) {
-            _mutex.lock();
+            _ndiFrameMutex.lock();
             video = _queue.front();
             _queue.pop_front();
-            _mutex.unlock();
+            _ndiFrameMutex.unlock();
         }
 
         // Decode video if available
         if (video != NULL) {
             frame = ndi_codec_decode(codec_ctx, video);
+
+            ts_started_converting_image = std::chrono::high_resolution_clock::now();;
+            // std::chrono::duration<double, std::milli> duration3;
+            // if (debugcounter2 % 10 == 0) {
+                // printf("NDI time between getting and consuming frame: %f ms\n", duration3.count());
+            // }
+
             if (frame) {
                 ndi_frame_get_format(frame, &format);
 
@@ -755,11 +775,15 @@ void ndi_decoder_thread() {
                         else {
                             after = std::chrono::high_resolution_clock::now();
                             duration = after - before;
-                            if (debugcounter2++ % 100 == 0) {
+                            if (debugcounter2++ % 10 == 0) {
                                 printf("NDI frame %d x %d sws_scale time: %f ms\n", format.width, format.height, duration.count());
                             }
 
+                            ts_marked_image_ready = std::chrono::high_resolution_clock::now();;
+                             
+                            // _tempFrameChangedM.lock();
                             _tempFrameChanged = true;
+                            // _tempFrameChangedM.unlock();
 
                         }
                     }
@@ -830,7 +854,6 @@ void ndi_decoder_thread() {
             ndi_recv_free_video(video);
             free(video);
         }
-
     }
 }
 
@@ -908,6 +931,9 @@ void preSync() {
     GLuint tex;
 
     if (videoSizeChanged) {
+        _videoSizeMutex.lock();
+        _videoScaleContext = NULL;
+        _tempFrame = NULL;
 
         // Recreate video context
         // printf("Video size changed: %d x %d\n", _videoWidth, _videoHeight);
@@ -915,6 +941,8 @@ void preSync() {
 
         _tempFrame = av_frame_alloc();
         if (!_tempFrame) {
+            _videoSizeMutex.unlock();
+
             sgct::Log::Error("Could not allocate temp frame data");
             return;
         }
@@ -932,6 +960,7 @@ void preSync() {
             1
         );
         if (ret < 0) {
+            _videoSizeMutex.unlock();
             sgct::Log::Error(fmt::format("Could not allocate temp frame buffer ({} x {})", _videoWidth, _videoHeight));
             return;
         }
@@ -941,6 +970,7 @@ void preSync() {
         }
 
         if (!_frame) {
+            _videoSizeMutex.unlock();
             sgct::Log::Error("Could not allocate frame data");
             return;
         }
@@ -959,6 +989,7 @@ void preSync() {
             nullptr
         );
         if (!_videoScaleContext) {
+            _videoSizeMutex.unlock();
             sgct::Log::Error("Could not allocate frame conversion context");
             return;
         }
@@ -978,6 +1009,7 @@ void preSync() {
         textures[6] = tex;
         
         videoSizeChanged = false;
+        _videoSizeMutex.unlock();
     }
 
     /*
@@ -1070,7 +1102,8 @@ void preSync() {
     }
     */
 
-  if (plane1changed || plane2changed || plane3changed || _tempFrameChanged) {
+  // if (plane1changed || plane2changed || plane3changed || _tempFrameChanged) {
+  if (_tempFrameChanged) {
 
       std::chrono::high_resolution_clock::time_point before, after;
       std::chrono::duration<double, std::milli> duration;
@@ -1082,12 +1115,21 @@ void preSync() {
 
       glBindBuffer(GL_PIXEL_UNPACK_BUFFER, PBO);
 
-      if (_tempFrameChanged) {
+   //   if (_tempFrameChanged) {
+
+
 
           uint32_t width = _videoWidth;
           uint32_t height = _videoHeight;
           // uint8_t* data = yuvvideoframe1.data();
           uint8_t* data = (uint8_t*)_tempFrame->data[0];
+
+          ts_started_uploading_image = std::chrono::high_resolution_clock::now();;
+          std::chrono::duration<double, std::milli> duration3;
+          duration3 = ts_started_uploading_image - ts_marked_image_ready;
+            if (debugcounter1 % 10 == 0) {
+              printf("NDI time decompressing frame and uploading: %f ms\n", duration3.count());
+           }
 
           unsigned char* gpuMemory = reinterpret_cast<unsigned char*>(glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY));
 
@@ -1133,12 +1175,12 @@ void preSync() {
                   0
               );
               glBindTexture(GL_TEXTURE_2D, 0);
-               
+              
+              // _tempFrameChangedM.lock();
               _tempFrameChanged = false;
-
+              // _tempFrameChangedM.unlock();
           }
-
-      }
+      // }
 
       /*
       if (plane1changed) {
@@ -1308,9 +1350,9 @@ void preSync() {
        after = std::chrono::high_resolution_clock::now();
        duration = after - before;
 
-       if (debugcounter1++ % 100 == 0) {
-       printf("GPU upload time: %f ms\n", duration.count());
-       }
+        if (debugcounter1++ % 10 == 0) {
+        printf("GPU upload time: %f ms\n", duration.count());
+        }
 
   }
    
