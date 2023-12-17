@@ -60,12 +60,32 @@ jobs:
         run: |
           echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-      - name: Setup anew (or from cache) vcpkg (and does not build any package)
-        uses: lukka/run-vcpkg@v11
+      #- name: Setup anew (or from cache) vcpkg (and does not build any package)
+      #  uses: lukka/run-vcpkg@v11
+      #  with:
+      #    vcpkgGitCommitId: 'c8696863d371ab7f46e213d8f5ca923c4aef2a00'
+      #    # vcpkgGitCommitId: 'ff6867374598312866fecfc64736a334591ceace'
+      #    runVcpkgInstall: true
+
+      - name: Install Vcpkg
+        run: |
+          git clone https://github.com/Microsoft/vcpkg.git
+          cd vcpkg
+          ./bootstrap-vcpkg.sh
+          ./vcpkg integrate install
+
+      - name: Cache Vcpkg Packages
+        uses: actions/cache@v2
         with:
-          vcpkgGitCommitId: 'c8696863d371ab7f46e213d8f5ca923c4aef2a00'
-          # vcpkgGitCommitId: 'ff6867374598312866fecfc64736a334591ceace'
-          runVcpkgInstall: true
+          path: vcpkg/packages
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg/vcpkg.json') }}
+
+      - name: Build Project
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake
+          make
 
       - name: Prints output of run-vcpkg's action.
         run: echo "root='${{ steps.runvcpkg.outputs.RUNVCPKG_VCPKG_ROOT_OUT }}', triplet='${{ steps.runvcpkg.outputs.RUNVCPKG_VCPKG_DEFAULT_TRIPLET_OUT }}' "
