@@ -67,20 +67,20 @@ jobs:
       #    # vcpkgGitCommitId: 'ff6867374598312866fecfc64736a334591ceace'
       #    runVcpkgInstall: true
 
+      # git checkout c8696863d371ab7f46e213d8f5ca923c4aef2a00
       - name: Install Vcpkg
         run: |
           git clone https://github.com/Microsoft/vcpkg.git
           cd vcpkg
-          git checkout c8696863d371ab7f46e213d8f5ca923c4aef2a00
           bootstrap-vcpkg.bat
 
       - name: Install Dependencies
         run: |
-          vcpkg install
+          vcpkg integrate install
 
       - name: Install Dependencies 2
         run: |
-          vcpkg integrate install
+          vcpkg install
 
       - name: Cache Vcpkg Packages
         uses: actions/cache@v2
