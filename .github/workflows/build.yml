@@ -72,13 +72,16 @@ jobs:
           git clone https://github.com/Microsoft/vcpkg.git
           cd vcpkg
           bootstrap-vcpkg.bat
+
+      - name: Install Dependencies
+        run: |
           vcpkg integrate install
 
       - name: Cache Vcpkg Packages
         uses: actions/cache@v2
         with:
           path: vcpkg/packages
-          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg/vcpkg.json') }}
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
 
       - name: Build Project
         run: |
