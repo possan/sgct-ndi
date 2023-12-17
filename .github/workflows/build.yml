@@ -60,22 +60,26 @@ jobs:
         run: |
           echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-      - name: Setup anew (or from cache) vcpkg (and does not build any package)
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgGitCommitId: 'ff6867374598312866fecfc64736a334591ceace'
+      #- name: Setup anew (or from cache) vcpkg (and does not build any package)
+      #  uses: lukka/run-vcpkg@v11
+      #  with:
+      #    vcpkgGitCommitId: 'ff6867374598312866fecfc64736a334591ceace'
 
       - name: Prints output of run-vcpkg's action.
         run: echo "root='${{ steps.runvcpkg.outputs.RUNVCPKG_VCPKG_ROOT_OUT }}', triplet='${{ steps.runvcpkg.outputs.RUNVCPKG_VCPKG_DEFAULT_TRIPLET_OUT }}' "
 
-      - name: Run CMake+vcpkg+NinjaMulti-Config
-        uses: lukka/run-cmake@v10
-        id: runcmake
-        with:
-          # cmakeListsTxtPath: "${{ github.workspace }}/cmakepresets/CMakeLists.txt"
-          configurePreset: "ninja-multi-vcpkg"
-          buildPreset: "ninja-multi-vcpkg"
-          buildPresetAdditionalArgs: "[`--config Debug`]"
+      #- name: Run CMake+vcpkg+NinjaMulti-Config
+      #  uses: lukka/run-cmake@v10
+      #  id: runcmake
+      #  with:
+      #    # cmakeListsTxtPath: "${{ github.workspace }}/cmakepresets/CMakeLists.txt"
+      #    configurePreset: "ninja-multi-vcpkg"
+      #    buildPreset: "ninja-multi-vcpkg"
+      #    buildPresetAdditionalArgs: "[`--config Debug`]"
+
+      - name: Restore vcpkg packages
+        working-directory: ${{env.GITHUB_WORKSPACE}}
+        run: vcpkg integrate install
 
       - name: List $RUNNER_WORKSPACE after build
         run: find $RUNNER_WORKSPACE
