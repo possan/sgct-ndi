@@ -75,6 +75,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
+          vcpkg install
           vcpkg integrate install
 
       - name: Cache Vcpkg Packages
